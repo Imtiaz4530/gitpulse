@@ -1,5 +1,7 @@
 import { Response } from "express";
+
 import { env } from "../config/env.js";
+import { parseDurationToMs } from "./duration.js";
 
 const REFRESH_COOKIE_NAME = "gitpulse_refresh_token";
 
@@ -9,7 +11,7 @@ export const setRefreshTokenCookie = (res: Response, token: string): void => {
     secure: env.cookieSecure,
     sameSite: "lax",
     path: "/api/auth",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: parseDurationToMs(env.refreshTokenExpiresIn),
   });
 };
 

@@ -11,6 +11,11 @@ import {
 
 import { hashToken } from "../utils/token.js";
 
+import { AppError } from "../utils/AppError.js";
+
+import { env } from "../config/env.js";
+import { parseDurationToMs } from "../utils/duration.js";
+
 interface RegisterInput {
   name: string;
   email: string;
@@ -27,39 +32,60 @@ interface SessionMetadata {
   ipAddress?: string;
 }
 
+const getSessionExpiration = (): Date => {
+  return new Date(Date.now() + parseDurationToMs(env.refreshTokenExpiresIn));
+};
+
+const createSession = async (userId: string, metadata: SessionMetadata) => {
+  const session = await Session.create({
+    userId,
+
+    refreshTokenHash: "pending",
+
+    expiresAt: getSessionExpiration(),
+
+    userAgent: metadata.userAgent,
+
+    ipAddress: metadata.ipAddress,
+  });
+
+  const refreshToken = createRefreshToken(userId, session.id);
+
+  session.refreshTokenHash = hashToken(refreshToken);
+
+  await session.save();
+
+  return {
+    session,
+    refreshToken,
+  };
+};
+
 export const registerUser = async (
   input: RegisterInput,
   metadata: SessionMetadata,
 ) => {
-  const existingUser = await User.findOne({
-    email: input.email.toLowerCase(),
-  });
+  const email = input.email.toLowerCase().trim();
+
+  const existingUser = await User.findOne({ email });
 
   if (existingUser) {
-    throw new Error("EMAIL_ALREADY_EXISTS");
+    throw new AppError(
+      "An account with this email already exists",
+      409,
+      "EMAIL_ALREADY_EXISTS",
+    );
   }
 
   const passwordHash = await hashPassword(input.password);
 
   const user = await User.create({
-    name: input.name,
-    email: input.email.toLowerCase(),
+    name: input.name.trim(),
+    email,
     passwordHash,
   });
 
-  const session = await Session.create({
-    userId: user._id,
-    refreshTokenHash: "pending",
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    userAgent: metadata.userAgent,
-    ipAddress: metadata.ipAddress,
-  });
-
-  const refreshToken = createRefreshToken(user.id, session.id);
-
-  session.refreshTokenHash = hashToken(refreshToken);
-
-  await session.save();
+  const { refreshToken } = await createSession(user.id, metadata);
 
   const accessToken = createAccessToken(user.id);
 
@@ -74,12 +100,12 @@ export const loginUser = async (
   input: LoginInput,
   metadata: SessionMetadata,
 ) => {
-  const user = await User.findOne({
-    email: input.email.toLowerCase(),
-  }).select("+passwordHash");
+  const email = input.email.toLowerCase().trim();
+
+  const user = await User.findOne({ email }).select("+passwordHash");
 
   if (!user) {
-    throw new Error("INVALID_CREDENTIALS");
+    throw new AppError("Invalid email or password", 401, "INVALID_CREDENTIALS");
   }
 
   const passwordValid = await comparePassword(
@@ -88,22 +114,10 @@ export const loginUser = async (
   );
 
   if (!passwordValid) {
-    throw new Error("INVALID_CREDENTIALS");
+    throw new AppError("Invalid email or password", 401, "INVALID_CREDENTIALS");
   }
 
-  const session = await Session.create({
-    userId: user._id,
-    refreshTokenHash: "pending",
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    userAgent: metadata.userAgent,
-    ipAddress: metadata.ipAddress,
-  });
-
-  const refreshToken = createRefreshToken(user.id, session.id);
-
-  session.refreshTokenHash = hashToken(refreshToken);
-
-  await session.save();
+  const { refreshToken } = await createSession(user.id, metadata);
 
   const accessToken = createAccessToken(user.id);
 
@@ -114,8 +128,21 @@ export const loginUser = async (
   };
 };
 
-export const refreshUserSession = async (refreshToken: string) => {
-  const payload = verifyRefreshToken(refreshToken);
+export const refreshUserSession = async (
+  refreshToken: string,
+  metadata: SessionMetadata,
+) => {
+  let payload;
+
+  try {
+    payload = verifyRefreshToken(refreshToken);
+  } catch {
+    throw new AppError(
+      "Invalid or expired refresh token",
+      401,
+      "INVALID_REFRESH_TOKEN",
+    );
+  }
 
   const session = await Session.findOne({
     _id: payload.sessionId,
@@ -124,23 +151,42 @@ export const refreshUserSession = async (refreshToken: string) => {
   });
 
   if (!session) {
-    throw new Error("INVALID_SESSION");
+    throw new AppError("Invalid session", 401, "INVALID_SESSION");
   }
 
   if (session.expiresAt.getTime() < Date.now()) {
-    throw new Error("SESSION_EXPIRED");
+    throw new AppError("Session expired", 401, "SESSION_EXPIRED");
   }
 
   const tokenHash = hashToken(refreshToken);
 
   if (tokenHash !== session.refreshTokenHash) {
-    throw new Error("INVALID_SESSION");
+    await Session.findByIdAndUpdate(session.id, {
+      revokedAt: new Date(),
+    });
+
+    throw new AppError("Invalid session", 401, "INVALID_SESSION");
   }
 
-  const newAccessToken = createAccessToken(payload.sub);
+  /*
+   * Refresh-token rotation:
+   * Revoke the old session before
+   * creating a new one.
+   */
+  await Session.findByIdAndUpdate(session.id, {
+    revokedAt: new Date(),
+  });
+
+  const { refreshToken: newRefreshToken } = await createSession(
+    payload.sub,
+    metadata,
+  );
+
+  const accessToken = createAccessToken(payload.sub);
 
   return {
-    accessToken: newAccessToken,
+    accessToken,
+    refreshToken: newRefreshToken,
   };
 };
 
@@ -158,6 +204,6 @@ export const logoutUser = async (refreshToken: string) => {
       },
     );
   } catch {
-    // Logout should remain idempotent.
+    // Logout is intentionally idempotent.
   }
 };
