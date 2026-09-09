@@ -15,6 +15,7 @@ import {
 } from "./auth.api";
 
 import { type User } from "../../types/auth";
+import { setAccessToken as setApiAccessToken } from "../../lib/api";
 
 interface RegisterInput {
   name: string;
@@ -48,7 +49,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
 
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [accessToken, setAuthToken] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -57,13 +58,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const token = await refreshAccessToken();
 
-        setAccessToken(token);
+        setAuthToken(token);
+        setApiAccessToken(token);
 
         const currentUser = await getCurrentUser();
 
         setUser(currentUser);
       } catch {
-        setAccessToken(null);
+        setAuthToken(null);
+        setApiAccessToken(null);
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -76,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (input: RegisterInput) => {
     const result = await registerUser(input);
 
-    setAccessToken(result.data.accessToken);
+    setApiAccessToken(result.data.accessToken);
 
     setUser(result.data.user);
   };
@@ -84,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (input: LoginInput) => {
     const result = await loginUser(input);
 
-    setAccessToken(result.data.accessToken);
+    setApiAccessToken(result.data.accessToken);
 
     setUser(result.data.user);
   };
@@ -93,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await logoutUser();
     } finally {
-      setAccessToken(null);
+      setApiAccessToken(null);
       setUser(null);
     }
   };
