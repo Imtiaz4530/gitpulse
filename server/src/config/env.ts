@@ -2,7 +2,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const requiredEnv = ["MONGODB_URI", "CLIENT_URL", "JWT_SECRET"] as const;
+const requiredEnv = [
+  "MONGODB_URI",
+  "CLIENT_URL",
+  "ACCESS_TOKEN_SECRET",
+  "REFRESH_TOKEN_SECRET",
+] as const;
 
 for (const key of requiredEnv) {
   if (!process.env[key]) {
@@ -19,7 +24,13 @@ export const env = {
 
   clientUrl: process.env.CLIENT_URL!,
 
-  jwtSecret: process.env.JWT_SECRET!,
+  accessTokenSecret: process.env.ACCESS_TOKEN_SECRET!,
 
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
+  refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET!,
+
+  accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN ?? "15m",
+
+  refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN ?? "7d",
+
+  cookieSecure: process.env.COOKIE_SECURE === "true",
 };
