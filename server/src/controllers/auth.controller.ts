@@ -14,6 +14,7 @@ import {
 } from "../utils/auth-cookie.js";
 
 import { AppError } from "../utils/AppError.js";
+import { isStrongPassword, isValidEmail } from "../utils/validation.js";
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   const { name, email, password } = req.body;
@@ -33,6 +34,22 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   if (password.length < 8) {
     throw new AppError(
       "Password must be at least 8 characters",
+      400,
+      "WEAK_PASSWORD",
+    );
+  }
+
+  if (!isValidEmail(email)) {
+    throw new AppError(
+      "Please provide a valid email address",
+      400,
+      "INVALID_EMAIL",
+    );
+  }
+
+  if (!isStrongPassword(password)) {
+    throw new AppError(
+      "Password must contain at least 8 characters, one uppercase letter, one lowercase letter and one number",
       400,
       "WEAK_PASSWORD",
     );
