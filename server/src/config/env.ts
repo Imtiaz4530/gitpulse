@@ -2,6 +2,14 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+const githubTokenEncryptionKey = process.env.GITHUB_TOKEN_ENCRYPTION_KEY;
+if (
+  !githubTokenEncryptionKey ||
+  !/^[0-9a-fA-F]{64}$/.test(githubTokenEncryptionKey)
+) {
+  throw new Error("GITHUB_TOKEN_ENCRYPTION_KEY must be a 32-byte hex key");
+}
+
 const requiredEnv = [
   "MONGODB_URI",
   "CLIENT_URL",
@@ -40,4 +48,6 @@ export const env = {
   githubClientId: process.env.GITHUB_CLIENT_ID!,
   githubClientSecret: process.env.GITHUB_CLIENT_SECRET!,
   githubOAuthCallbackUrl: process.env.GITHUB_OAUTH_CALLBACK_URL!,
+
+  githubTokenEncryptionKey,
 };

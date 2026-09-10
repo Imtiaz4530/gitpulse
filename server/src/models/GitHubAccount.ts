@@ -38,10 +38,24 @@ const githubAccountSchema = new Schema(
       type: String,
       default: null,
     },
-
     accessTokenEncrypted: {
       type: String,
       required: true,
+    },
+
+    accessTokenExpiresAt: {
+      type: Date,
+      default: null,
+    },
+
+    refreshTokenEncrypted: {
+      type: String,
+      default: null,
+    },
+
+    refreshTokenExpiresAt: {
+      type: Date,
+      default: null,
     },
 
     scopes: {
