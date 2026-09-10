@@ -7,6 +7,9 @@ const requiredEnv = [
   "CLIENT_URL",
   "ACCESS_TOKEN_SECRET",
   "REFRESH_TOKEN_SECRET",
+  "GITHUB_CLIENT_ID",
+  "GITHUB_CLIENT_SECRET",
+  "GITHUB_OAUTH_CALLBACK_URL",
 ] as const;
 
 for (const key of requiredEnv) {
@@ -34,7 +37,7 @@ export const env = {
 
   cookieSecure: process.env.COOKIE_SECURE === "true",
 
-  githubClientId: process.env.GITHUB_CLIENT_ID,
-  githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
-  githubOAuthCallbackUrl: process.env.GITHUB_OAUTH_CALLBACK_URL,
+  githubClientId: process.env.GITHUB_CLIENT_ID!,
+  githubClientSecret: process.env.GITHUB_CLIENT_SECRET!,
+  githubOAuthCallbackUrl: process.env.GITHUB_OAUTH_CALLBACK_URL!,
 };
