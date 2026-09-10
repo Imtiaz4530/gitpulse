@@ -1,7 +1,7 @@
 import { Response } from "express";
 
-import User from "../models/User.js";
-import { AuthenticatedRequest } from "../types/auth.js";
+import User from "../models/User";
+import { AuthenticatedRequest } from "../types/auth";
 
 export const getCurrentUser = async (
   req: AuthenticatedRequest,
