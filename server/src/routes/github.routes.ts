@@ -4,6 +4,6 @@ import { startGitHubOAuth } from "../controllers/github-oauth.controller";
 
 const router = Router();
 
-router.get("/oauth/start", requireAuth, startGitHubOAuth);
+router.post("/oauth/start", requireAuth, startGitHubOAuth);
 
 export default router;

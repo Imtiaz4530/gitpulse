@@ -16,5 +16,8 @@ export async function startGitHubOAuth(
 
   const authorizationUrl = await createGitHubAuthorizationUrl(req.userId);
 
-  return res.redirect(authorizationUrl);
+  return res.json({
+    success: true,
+    authorizationUrl,
+  });
 }
