@@ -15,3 +15,19 @@ export interface GitHubUser {
   avatar_url: string;
   html_url: string;
 }
+
+export interface GitHubAccount {
+  githubId: number;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  profileUrl: string;
+  connectedAt: string;
+  scopes: string[];
+}
+
+export interface GitHubStatusResponse {
+  success: boolean;
+  connected: boolean;
+  account: GitHubAccount | null;
+}
