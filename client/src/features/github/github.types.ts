@@ -1,5 +1,10 @@
+export interface GitHubAccount {
+  username: string;
+  displayName?: string;
+  avatarUrl?: string;
+}
+
 export interface GitHubStatusResponse {
   success: boolean;
-  connected: boolean;
-  githubUsername?: string;
+  account?: GitHubAccount;
 }
