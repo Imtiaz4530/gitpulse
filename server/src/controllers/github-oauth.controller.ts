@@ -4,7 +4,51 @@ import {
   createGitHubAuthorizationUrl,
   handleGitHubCallback,
 } from "../services/github-oauth.service";
+import {
+  getGitHubConnectionStatus,
+  disconnectGitHub,
+} from "../services/github-account.service";
 import { env } from "../config/env";
+
+export async function getGitHubStatus(
+  req: AuthenticatedRequest,
+  res: Response,
+) {
+  if (!req.userId) {
+    return res.status(401).json({
+      success: false,
+      code: "UNAUTHORIZED",
+      message: "Authentication required",
+    });
+  }
+
+  const status = await getGitHubConnectionStatus(req.userId);
+
+  return res.json({
+    success: true,
+    ...status,
+  });
+}
+
+export async function disconnectGitHubAccount(
+  req: AuthenticatedRequest,
+  res: Response,
+) {
+  if (!req.userId) {
+    return res.status(401).json({
+      success: false,
+      code: "UNAUTHORIZED",
+      message: "Authentication required",
+    });
+  }
+
+  await disconnectGitHub(req.userId);
+
+  return res.json({
+    success: true,
+    message: "GitHub account disconnected successfully",
+  });
+}
 
 export async function startGitHubOAuth(
   req: AuthenticatedRequest,
