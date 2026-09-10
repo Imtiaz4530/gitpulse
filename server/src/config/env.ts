@@ -33,4 +33,8 @@ export const env = {
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN ?? "7d",
 
   cookieSecure: process.env.COOKIE_SECURE === "true",
+
+  githubClientId: process.env.GITHUB_CLIENT_ID,
+  githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
+  githubOAuthCallbackUrl: process.env.GITHUB_OAUTH_CALLBACK_URL,
 };

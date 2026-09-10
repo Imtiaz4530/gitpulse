@@ -31,14 +31,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     );
   }
 
-  if (password.length < 8) {
-    throw new AppError(
-      "Password must be at least 8 characters",
-      400,
-      "WEAK_PASSWORD",
-    );
-  }
-
   if (!isValidEmail(email)) {
     throw new AppError(
       "Please provide a valid email address",
