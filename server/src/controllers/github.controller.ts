@@ -10,6 +10,12 @@ import {
 
 import { getGitHubAccessToken } from "../services/github/github-token.service";
 import { syncRepositoryEngineeringData } from "../services/github/engineering-sync.service";
+import {
+  queueRepositorySync,
+  queueEngineeringDataSync,
+} from "../services/github-sync-queue.service";
+
+import { SyncJobModel } from "../models/SyncJob";
 
 export async function getGitHubApiUser(
   req: AuthenticatedRequest,
@@ -51,12 +57,24 @@ export async function syncGitHubRepositories(
   req: AuthenticatedRequest,
   res: Response,
 ) {
-  const result = await syncRepositories(req.userId!);
+  const job = await queueRepositorySync({
+    userId: req.userId!,
+  });
 
-  res.status(200).json({
+  await SyncJobModel.create({
+    userId: req.userId!,
+    bullJobId: job.id!,
+    type: "repository",
+    status: "queued",
+  });
+
+  res.status(202).json({
     success: true,
-    message: "GitHub repositories synchronized successfully.",
-    data: result,
+    message: "GitHub repository synchronization queued.",
+    data: {
+      jobId: job.id,
+      status: "queued",
+    },
   });
 }
 
@@ -64,14 +82,34 @@ export async function syncGitHubEngineeringData(
   req: AuthenticatedRequest,
   res: Response,
 ) {
-  const result = await syncRepositoryEngineeringData(
-    req.userId!,
-    req.params.repositoryId,
-  );
+  const repositoryId = req.params.repositoryId;
 
-  res.status(200).json({
+  const job = await queueEngineeringDataSync({
+    userId: req.userId!,
+    repositoryId,
+  });
+
+  await SyncJobModel.create({
+    userId: req.userId!,
+
+    repositoryId,
+
+    bullJobId: job.id!,
+
+    type: "engineering-data",
+
+    status: "queued",
+  });
+
+  res.status(202).json({
     success: true,
-    message: "GitHub engineering data synchronized successfully.",
-    data: result,
+
+    message: "GitHub engineering data synchronization queued.",
+
+    data: {
+      jobId: job.id,
+      repositoryId,
+      status: "queued",
+    },
   });
 }
