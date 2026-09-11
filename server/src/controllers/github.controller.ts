@@ -1,6 +1,7 @@
 import type { Response } from "express";
 
 import type { AuthenticatedRequest } from "../types/auth";
+import { syncRepositories } from "../services/github/repository-sync.service";
 
 import {
   getAuthenticatedUser,
@@ -42,5 +43,18 @@ export async function getGitHubRepositories(
     success: true,
     data: repositories.data,
     pagination: repositories.pagination,
+  });
+}
+
+export async function syncGitHubRepositories(
+  req: AuthenticatedRequest,
+  res: Response,
+) {
+  const result = await syncRepositories(req.userId!);
+
+  res.status(200).json({
+    success: true,
+    message: "GitHub repositories synchronized successfully.",
+    data: result,
   });
 }
