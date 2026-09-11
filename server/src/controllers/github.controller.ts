@@ -9,6 +9,7 @@ import {
 } from "../services/github/github.api";
 
 import { getGitHubAccessToken } from "../services/github/github-token.service";
+import { syncRepositoryEngineeringData } from "../services/github/engineering-sync.service";
 
 export async function getGitHubApiUser(
   req: AuthenticatedRequest,
@@ -55,6 +56,22 @@ export async function syncGitHubRepositories(
   res.status(200).json({
     success: true,
     message: "GitHub repositories synchronized successfully.",
+    data: result,
+  });
+}
+
+export async function syncGitHubEngineeringData(
+  req: AuthenticatedRequest,
+  res: Response,
+) {
+  const result = await syncRepositoryEngineeringData(
+    req.userId!,
+    req.params.repositoryId,
+  );
+
+  res.status(200).json({
+    success: true,
+    message: "GitHub engineering data synchronized successfully.",
     data: result,
   });
 }
