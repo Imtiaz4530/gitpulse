@@ -18,6 +18,7 @@ const requiredEnv = [
   "GITHUB_CLIENT_ID",
   "GITHUB_CLIENT_SECRET",
   "GITHUB_OAUTH_CALLBACK_URL",
+  "REDIS_URL",
 ] as const;
 
 for (const key of requiredEnv) {
@@ -50,4 +51,6 @@ export const env = {
   githubOAuthCallbackUrl: process.env.GITHUB_OAUTH_CALLBACK_URL!,
 
   githubTokenEncryptionKey,
+
+  redisUrl: process.env.REDIS_URL!,
 };

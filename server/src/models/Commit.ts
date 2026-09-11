@@ -23,7 +23,6 @@ const commitSchema = new Schema(
     authorLogin: {
       type: String,
       default: null,
-      trim: true,
     },
 
     authorName: {
