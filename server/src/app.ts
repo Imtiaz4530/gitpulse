@@ -11,6 +11,7 @@ import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import githubRoutes from "./routes/github.routes";
 import githubApiRoutes from "./routes/github-api.routes";
+import syncJobRoutes from "./routes/sync-job.routes";
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/github", githubRoutes);
 app.use("/api/github", githubApiRoutes);
+app.use("/api/sync-jobs", syncJobRoutes);
 
 app.use(errorHandler);
 
