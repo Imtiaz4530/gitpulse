@@ -57,48 +57,29 @@ export async function syncGitHubRepositories(
   req: AuthenticatedRequest,
   res: Response,
 ) {
-  const job = await queueRepositorySync({
+  const result = await queueRepositorySync({
     userId: req.userId!,
-  });
-
-  await SyncJobModel.create({
-    userId: req.userId!,
-    bullJobId: job.id!,
-    type: "repository",
-    status: "queued",
   });
 
   res.status(202).json({
     success: true,
+
     message: "GitHub repository synchronization queued.",
+
     data: {
-      jobId: job.id,
+      jobId: result.job.id,
+      syncJobId: result.syncJobId,
       status: "queued",
     },
   });
 }
-
 export async function syncGitHubEngineeringData(
   req: AuthenticatedRequest,
   res: Response,
 ) {
-  const repositoryId = req.params.repositoryId;
-
-  const job = await queueEngineeringDataSync({
+  const result = await queueEngineeringDataSync({
     userId: req.userId!,
-    repositoryId,
-  });
-
-  await SyncJobModel.create({
-    userId: req.userId!,
-
-    repositoryId,
-
-    bullJobId: job.id!,
-
-    type: "engineering-data",
-
-    status: "queued",
+    repositoryId: req.params.repositoryId,
   });
 
   res.status(202).json({
@@ -107,8 +88,9 @@ export async function syncGitHubEngineeringData(
     message: "GitHub engineering data synchronization queued.",
 
     data: {
-      jobId: job.id,
-      repositoryId,
+      jobId: result.job.id,
+      syncJobId: result.syncJobId,
+      repositoryId: req.params.repositoryId,
       status: "queued",
     },
   });
